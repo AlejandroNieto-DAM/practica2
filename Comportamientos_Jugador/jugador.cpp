@@ -5,6 +5,7 @@
 #include <cmath>
 #include <set>
 #include <stack>
+#include <queue>
 
 // Este es el método principal que se piden en la practica.
 // Tiene como entrada la información de los sensores y devuelve la acción a realizar.
@@ -32,7 +33,20 @@ Action ComportamientoJugador::think(Sensores sensores)
 		objetivos.push_back(aux);
 	}
 
-	bool hay_plan = pathFinding(sensores.nivel, actual, objetivos, plan);
+	if (!hayPlan)
+	{
+		hayPlan = pathFinding(sensores.nivel, actual, objetivos, plan);
+	}
+
+	if (hayPlan and plan.size() > 0)
+	{
+		accion = plan.front();
+		plan.erase(plan.begin());
+	}
+	else
+	{
+		cout << "No se pudo encontrar plan" << endl;
+	}
 
 	return accion;
 }
@@ -53,8 +67,10 @@ bool ComportamientoJugador::pathFinding(int level, const estado &origen, const l
 
 	case 1:
 		cout << "Optimo numero de acciones\n";
-		// Incluir aqui la llamada al busqueda en anchura
-		cout << "No implementado aun\n";
+		estado un_objetivo1;
+		un_objetivo1 = objetivos.front();
+		cout << "fila: " << un_objetivo1.fila << " col:" << un_objetivo1.columna << endl;
+		return pathFinding_Anchura(origen, un_objetivo1, plan);
 		break;
 	case 2:
 		cout << "Optimo en coste\n";
@@ -164,6 +180,120 @@ struct ComparaEstados
 			return false;
 	}
 };
+
+bool findEstadosQueue(estado s, queue<nodo> q)
+{
+
+	bool encontrado = false;
+
+	while (!q.empty() and !encontrado)
+	{
+		estado a = q.front().st;
+		q.pop();
+		if ((a.fila > s.fila) or (a.fila == s.fila and a.columna > s.columna) or
+			(a.fila == s.fila and a.columna == s.columna and a.orientacion > s.orientacion))
+		{
+			encontrado = true;
+		}
+	}
+
+	return encontrado;
+}
+
+bool ComportamientoJugador::pathFinding_Anchura(estado origen, estado destino, list<Action> &plan)
+{
+	nodo current;
+	current.st = origen;
+	current.secuencia.empty();
+
+	plan.clear();
+
+	if (current.st.fila == destino.fila && current.st.columna == destino.columna)
+	{
+		return true;
+	}
+
+	queue<nodo> frontier;
+	frontier.push(current);
+	set<estado, ComparaEstados> explored;
+	
+	do
+	{
+
+		if(frontier.empty()){
+			return false;
+		}
+
+		current = frontier.front();
+		frontier.pop();
+		explored.insert(current.st);
+
+		// Generar descendiente de girar a la derecha 90 grados
+		nodo hijoTurnR = current;
+		hijoTurnR.st.orientacion = (hijoTurnR.st.orientacion + 2) % 8;
+		if (findEstadosQueue(hijoTurnR.st, frontier) == false or explored.find(hijoTurnR.st) == explored.end())
+		{
+			hijoTurnR.secuencia.push_back(actTURN_R);
+			frontier.push(hijoTurnR);
+		}
+
+		// Generar descendiente de girar a la derecha 45 grados
+		nodo hijoSEMITurnR = current;
+		hijoSEMITurnR.st.orientacion = (hijoSEMITurnR.st.orientacion + 1) % 8;
+		if (!findEstadosQueue(hijoSEMITurnR.st, frontier) or explored.find(hijoSEMITurnR.st) == explored.end())
+		{
+			hijoSEMITurnR.secuencia.push_back(actSEMITURN_R);
+			frontier.push(hijoSEMITurnR);
+		}
+
+		// Generar descendiente de girar a la izquierda 90 grados
+		nodo hijoTurnL = current;
+		hijoTurnL.st.orientacion = (hijoTurnL.st.orientacion + 6) % 8;
+		if (!findEstadosQueue(hijoTurnL.st, frontier) or explored.find(hijoTurnL.st) == explored.end())
+		{
+			hijoTurnL.secuencia.push_back(actTURN_L);
+			frontier.push(hijoTurnL);
+		}
+
+		// Generar descendiente de girar a la izquierda 45 grados
+		nodo hijoSEMITurnL = current;
+		hijoSEMITurnL.st.orientacion = (hijoSEMITurnL.st.orientacion + 7) % 8;
+		if (!findEstadosQueue(hijoSEMITurnL.st, frontier) or explored.find(hijoSEMITurnL.st) == explored.end())
+		{
+			hijoSEMITurnL.secuencia.push_back(actSEMITURN_L);
+			frontier.push(hijoSEMITurnL);
+		}
+
+		// Generar descendiente de avanzar
+		nodo hijoForward = current;
+		if (!HayObstaculoDelante(hijoForward.st))
+		{
+			if (!findEstadosQueue(hijoForward.st, frontier) or explored.find(hijoForward.st) == explored.end())
+			{	
+				hijoForward.secuencia.push_back(actFORWARD);
+				frontier.push(hijoForward);
+			}
+		}
+	} while (!frontier.empty() and (current.st.fila != destino.fila or current.st.columna != destino.columna));
+
+	cout << "Terminada la busqueda\n";
+
+	if (current.st.fila == destino.fila and current.st.columna == destino.columna)
+	{
+		cout << "Cargando el plan\n";
+		plan = current.secuencia;
+		cout << "Longitud del plan: " << plan.size() << endl;
+		PintaPlan(plan);
+		// ver el plan en el mapa
+		VisualizaPlan(origen, plan);
+		return true;
+	}
+
+	cout << "No encontrado plan\n";
+
+	return false;
+}
+
 
 // Implementación de la busqueda en profundidad.
 // Entran los puntos origen y destino y devuelve la
