@@ -181,48 +181,21 @@ struct ComparaEstados
 	}
 };
 
-bool findEstadosQueue(estado s, queue<nodo> q)
-{
+bool ComportamientoJugador::pathFinding_Anchura(const estado &origen, const estado &destino, list<Action> &plan){
+	// Borro la lista
+	cout << "Calculando plan\n";
+	plan.clear();
+	set<estado, ComparaEstados> explored; // Lista de Cerrados
+	queue<nodo> frontier;				  // Lista de Abiertos
 
-	bool encontrado = false;
-
-	while (!q.empty() and !encontrado)
-	{
-		estado a = q.front().st;
-		q.pop();
-		if ((a.fila > s.fila) or (a.fila == s.fila and a.columna > s.columna) or
-			(a.fila == s.fila and a.columna == s.columna and a.orientacion > s.orientacion))
-		{
-			encontrado = true;
-		}
-	}
-
-	return encontrado;
-}
-
-bool ComportamientoJugador::pathFinding_Anchura(estado origen, estado destino, list<Action> &plan)
-{
 	nodo current;
 	current.st = origen;
 	current.secuencia.empty();
 
-	plan.clear();
-
-	if (current.st.fila == destino.fila && current.st.columna == destino.columna)
-	{
-		return true;
-	}
-
-	queue<nodo> frontier;
 	frontier.push(current);
-	set<estado, ComparaEstados> explored;
-	
-	do
-	{
 
-		if(frontier.empty()){
-			return false;
-		}
+	while (!frontier.empty() and (current.st.fila != destino.fila or current.st.columna != destino.columna))
+	{
 
 		current = frontier.front();
 		frontier.pop();
@@ -231,7 +204,7 @@ bool ComportamientoJugador::pathFinding_Anchura(estado origen, estado destino, l
 		// Generar descendiente de girar a la derecha 90 grados
 		nodo hijoTurnR = current;
 		hijoTurnR.st.orientacion = (hijoTurnR.st.orientacion + 2) % 8;
-		if (findEstadosQueue(hijoTurnR.st, frontier) == false or explored.find(hijoTurnR.st) == explored.end())
+		if (explored.find(hijoTurnR.st) == explored.end())
 		{
 			hijoTurnR.secuencia.push_back(actTURN_R);
 			frontier.push(hijoTurnR);
@@ -240,7 +213,7 @@ bool ComportamientoJugador::pathFinding_Anchura(estado origen, estado destino, l
 		// Generar descendiente de girar a la derecha 45 grados
 		nodo hijoSEMITurnR = current;
 		hijoSEMITurnR.st.orientacion = (hijoSEMITurnR.st.orientacion + 1) % 8;
-		if (!findEstadosQueue(hijoSEMITurnR.st, frontier) or explored.find(hijoSEMITurnR.st) == explored.end())
+		if (explored.find(hijoSEMITurnR.st) == explored.end())
 		{
 			hijoSEMITurnR.secuencia.push_back(actSEMITURN_R);
 			frontier.push(hijoSEMITurnR);
@@ -249,7 +222,7 @@ bool ComportamientoJugador::pathFinding_Anchura(estado origen, estado destino, l
 		// Generar descendiente de girar a la izquierda 90 grados
 		nodo hijoTurnL = current;
 		hijoTurnL.st.orientacion = (hijoTurnL.st.orientacion + 6) % 8;
-		if (!findEstadosQueue(hijoTurnL.st, frontier) or explored.find(hijoTurnL.st) == explored.end())
+		if (explored.find(hijoTurnL.st) == explored.end())
 		{
 			hijoTurnL.secuencia.push_back(actTURN_L);
 			frontier.push(hijoTurnL);
@@ -258,7 +231,7 @@ bool ComportamientoJugador::pathFinding_Anchura(estado origen, estado destino, l
 		// Generar descendiente de girar a la izquierda 45 grados
 		nodo hijoSEMITurnL = current;
 		hijoSEMITurnL.st.orientacion = (hijoSEMITurnL.st.orientacion + 7) % 8;
-		if (!findEstadosQueue(hijoSEMITurnL.st, frontier) or explored.find(hijoSEMITurnL.st) == explored.end())
+		if (explored.find(hijoSEMITurnL.st) == explored.end())
 		{
 			hijoSEMITurnL.secuencia.push_back(actSEMITURN_L);
 			frontier.push(hijoSEMITurnL);
@@ -268,13 +241,13 @@ bool ComportamientoJugador::pathFinding_Anchura(estado origen, estado destino, l
 		nodo hijoForward = current;
 		if (!HayObstaculoDelante(hijoForward.st))
 		{
-			if (!findEstadosQueue(hijoForward.st, frontier) or explored.find(hijoForward.st) == explored.end())
-			{	
+			if (explored.find(hijoForward.st) == explored.end())
+			{
 				hijoForward.secuencia.push_back(actFORWARD);
 				frontier.push(hijoForward);
 			}
 		}
-	} while (!frontier.empty() and (current.st.fila != destino.fila or current.st.columna != destino.columna));
+	}
 
 	cout << "Terminada la busqueda\n";
 
@@ -288,8 +261,10 @@ bool ComportamientoJugador::pathFinding_Anchura(estado origen, estado destino, l
 		VisualizaPlan(origen, plan);
 		return true;
 	}
-
-	cout << "No encontrado plan\n";
+	else
+	{
+		cout << "No encontrado plan\n";
+	}
 
 	return false;
 }
