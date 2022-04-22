@@ -19,9 +19,9 @@ Action ComportamientoJugador::think(Sensores sensores)
 	actual.columna = sensores.posC;
 	actual.orientacion = sensores.sentido;
 
-	cout << "Fila: " << actual.fila << endl;
-	cout << "Col : " << actual.columna << endl;
-	cout << "Ori : " << actual.orientacion << endl;
+	// cout << "Fila: " << actual.fila << endl;
+	// cout << "Col : " << actual.columna << endl;
+	// cout << "Ori : " << actual.orientacion << endl;
 
 	// Capturo los destinos
 	cout << "sensores.num_destinos : " << sensores.num_destinos << endl;
@@ -71,9 +71,11 @@ int ComportamientoJugador::costeCasilla(estado a, Action act)
 
 	char tipoCasilla = mapaResultado[a.fila][a.columna];
 	int costeCasilla = 1;
+
 	switch (act)
 	{
 	case actFORWARD:
+
 		switch (tipoCasilla)
 		{
 		case 'A':
@@ -105,7 +107,38 @@ int ComportamientoJugador::costeCasilla(estado a, Action act)
 
 		break;
 
+	case actSEMITURN_L:
 	case actSEMITURN_R:
+
+		switch (tipoCasilla)
+		{
+		case 'A':
+			if (bikiniOn)
+			{
+				costeCasilla = 2;
+			}
+			else
+			{
+				costeCasilla = 300;
+			}
+			break;
+
+		case 'B':
+			if (zapatillasOn)
+			{
+				costeCasilla = 1;
+			}
+			else
+			{
+				costeCasilla = 2;
+			}
+			break;
+
+		}
+
+		break;
+
+	case actTURN_L:
 	case actTURN_R:
 		switch (tipoCasilla)
 		{
@@ -133,37 +166,6 @@ int ComportamientoJugador::costeCasilla(estado a, Action act)
 
 		case 'T':
 			costeCasilla = 2;
-			break;
-		}
-
-	case actSEMITURN_L:
-	case actTURN_L:
-		switch (tipoCasilla)
-		{
-		case 'A':
-			if (bikiniOn)
-			{
-				costeCasilla = 2;
-			}
-			else
-			{
-				costeCasilla = 300;
-			}
-			break;
-
-		case 'B':
-			if (zapatillasOn)
-			{
-				costeCasilla = 1;
-			}
-			else
-			{
-				costeCasilla = 2;
-			}
-			break;
-
-		case 'T':
-			costeCasilla = 1;
 			break;
 		}
 
@@ -318,17 +320,26 @@ void nodoConMayorCoste(priority_queue<nodo, vector<nodo>, ComparaCostes> &fronti
 {
 	priority_queue<nodo, vector<nodo>, ComparaCostes> aux;
 	bool encontrado = false;
+
 	while (!frontier.empty())
 	{
 
-		if (a.st.fila == frontier.top().st.fila and a.st.columna == frontier.top().st.columna )
+		if (a.st.fila == frontier.top().st.fila and a.st.columna == frontier.top().st.columna)
 		{
-			if (a.path_cost <= frontier.top().path_cost and encontrado == false)
+			if (encontrado == false)
 			{
-				aux.push(a);
+				if (a.path_cost < frontier.top().path_cost)
+				{
+					aux.push(a);
+					
+				}
+				else
+				{
+					aux.push(frontier.top());
+				}
+
 				encontrado = true;
-			} 
-			
+			}
 		}
 		else
 		{
@@ -352,6 +363,7 @@ bool ComportamientoJugador::pathFinding_Costo(const estado &origen, const estado
 
 	nodo current;
 	current.st = origen;
+	current.path_cost = 0;
 	current.secuencia.empty();
 
 	frontier.push(current);
@@ -433,6 +445,7 @@ bool ComportamientoJugador::pathFinding_Costo(const estado &origen, const estado
 		cout << "Cargando el plan\n";
 		plan = current.secuencia;
 		cout << "Longitud del plan: " << plan.size() << endl;
+		cout << "Coste del plan = " << current.path_cost << endl;
 		PintaPlan(plan);
 		// ver el plan en el mapa
 		VisualizaPlan(origen, plan);
