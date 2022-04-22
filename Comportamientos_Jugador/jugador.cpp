@@ -49,28 +49,31 @@ Action ComportamientoJugador::think(Sensores sensores)
 		cout << "No se pudo encontrar plan" << endl;
 	}
 
-	if (mapaResultado[actual.fila][actual.columna] == 'K')
-	{
-		bikiniOn = true;
-		zapatillasOn = false;
-		// cout << "Bikini on suuuuuuuuuuuuu" << endl;
-	}
-
-	if (mapaResultado[actual.fila][actual.columna] == 'D')
-	{
-		bikiniOn = false;
-		zapatillasOn = true;
-		// cout << "Zapatillas on suuuuuuuuuuuuu" << endl;
-	}
-
 	return accion;
 }
 
-int ComportamientoJugador::costeCasilla(estado a, Action act)
+
+
+int ComportamientoJugador::costeCasilla(nodo &a, Action act)
 {
 
-	char tipoCasilla = mapaResultado[a.fila][a.columna];
+	char tipoCasilla = mapaResultado[a.st.fila][a.st.columna];
+
 	int costeCasilla = 1;
+
+	if (mapaResultado[a.st.fila][a.st.columna] == 'K')
+	{
+		a.eq.bikiniOn = true;
+		a.eq.zapatillasOn = false;
+		// cout << "Bikini on suuuuuuuuuuuuu" << endl;
+	}
+
+	if (mapaResultado[a.st.fila][a.st.columna] == 'D')
+	{
+		a.eq.bikiniOn = false;
+		a.eq.zapatillasOn = true;
+		// cout << "Zapatillas on suuuuuuuuuuuuu" << endl;
+	}
 
 	switch (act)
 	{
@@ -79,7 +82,7 @@ int ComportamientoJugador::costeCasilla(estado a, Action act)
 		switch (tipoCasilla)
 		{
 		case 'A':
-			if (bikiniOn)
+			if (a.eq.bikiniOn)
 			{
 				costeCasilla = 10;
 			}
@@ -90,7 +93,7 @@ int ComportamientoJugador::costeCasilla(estado a, Action act)
 			break;
 
 		case 'B':
-			if (zapatillasOn)
+			if (a.eq.zapatillasOn)
 			{
 				costeCasilla = 15;
 			}
@@ -113,7 +116,7 @@ int ComportamientoJugador::costeCasilla(estado a, Action act)
 		switch (tipoCasilla)
 		{
 		case 'A':
-			if (bikiniOn)
+			if (a.eq.bikiniOn)
 			{
 				costeCasilla = 2;
 			}
@@ -124,7 +127,7 @@ int ComportamientoJugador::costeCasilla(estado a, Action act)
 			break;
 
 		case 'B':
-			if (zapatillasOn)
+			if (a.eq.zapatillasOn)
 			{
 				costeCasilla = 1;
 			}
@@ -143,7 +146,7 @@ int ComportamientoJugador::costeCasilla(estado a, Action act)
 		switch (tipoCasilla)
 		{
 		case 'A':
-			if (bikiniOn)
+			if (a.eq.bikiniOn)
 			{
 				costeCasilla = 5;
 			}
@@ -154,7 +157,7 @@ int ComportamientoJugador::costeCasilla(estado a, Action act)
 			break;
 
 		case 'B':
-			if (zapatillasOn)
+			if (a.eq.zapatillasOn)
 			{
 				costeCasilla = 1;
 			}
@@ -289,12 +292,7 @@ bool ComportamientoJugador::HayObstaculoDelante(estado &st)
 	}
 }
 
-struct nodo
-{
-	estado st;
-	list<Action> secuencia;
-	int path_cost = 0;
-};
+
 
 struct ComparaEstados
 {
@@ -378,7 +376,7 @@ bool ComportamientoJugador::pathFinding_Costo(const estado &origen, const estado
 		// Generar descendiente de girar a la derecha 90 grados
 		nodo hijoTurnR = current;
 		hijoTurnR.st.orientacion = (hijoTurnR.st.orientacion + 2) % 8;
-		hijoTurnR.path_cost += costeCasilla(hijoTurnR.st, actTURN_R);
+		hijoTurnR.path_cost += costeCasilla(hijoTurnR, actTURN_R);
 		if (explored.find(hijoTurnR.st) == explored.end())
 		{
 			hijoTurnR.secuencia.push_back(actTURN_R);
@@ -390,7 +388,7 @@ bool ComportamientoJugador::pathFinding_Costo(const estado &origen, const estado
 		// Generar descendiente de girar a la derecha 45 grados
 		nodo hijoSEMITurnR = current;
 		hijoSEMITurnR.st.orientacion = (hijoSEMITurnR.st.orientacion + 1) % 8;
-		hijoSEMITurnR.path_cost += costeCasilla(hijoSEMITurnR.st, actSEMITURN_R);
+		hijoSEMITurnR.path_cost += costeCasilla(hijoSEMITurnR, actSEMITURN_R);
 		if (explored.find(hijoSEMITurnR.st) == explored.end())
 		{
 			hijoSEMITurnR.secuencia.push_back(actSEMITURN_R);
@@ -402,7 +400,7 @@ bool ComportamientoJugador::pathFinding_Costo(const estado &origen, const estado
 		// Generar descendiente de girar a la izquierda 90 grados
 		nodo hijoTurnL = current;
 		hijoTurnL.st.orientacion = (hijoTurnL.st.orientacion + 6) % 8;
-		hijoTurnL.path_cost += costeCasilla(hijoTurnL.st, actTURN_L);
+		hijoTurnL.path_cost += costeCasilla(hijoTurnL, actTURN_L);
 		if (explored.find(hijoTurnL.st) == explored.end())
 		{
 			hijoTurnL.secuencia.push_back(actTURN_L);
@@ -414,7 +412,7 @@ bool ComportamientoJugador::pathFinding_Costo(const estado &origen, const estado
 		// Generar descendiente de girar a la izquierda 45 grados
 		nodo hijoSEMITurnL = current;
 		hijoSEMITurnL.st.orientacion = (hijoSEMITurnL.st.orientacion + 7) % 8;
-		hijoSEMITurnL.path_cost += costeCasilla(hijoSEMITurnL.st, actSEMITURN_L);
+		hijoSEMITurnL.path_cost += costeCasilla(hijoSEMITurnL, actSEMITURN_L);
 		if (explored.find(hijoSEMITurnL.st) == explored.end())
 		{
 			hijoSEMITurnL.secuencia.push_back(actSEMITURN_L);
@@ -427,7 +425,7 @@ bool ComportamientoJugador::pathFinding_Costo(const estado &origen, const estado
 		nodo hijoForward = current;
 		if (!HayObstaculoDelante(hijoForward.st))
 		{
-			hijoForward.path_cost += costeCasilla(hijoForward.st, actFORWARD);
+			hijoForward.path_cost += costeCasilla(hijoForward, actFORWARD);
 			if (explored.find(hijoForward.st) == explored.end())
 			{
 				hijoForward.secuencia.push_back(actFORWARD);
