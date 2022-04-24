@@ -1,2 +1,0 @@
-mapa30 nivel2 max 2858
-mapa50 nivel2 max 2799
