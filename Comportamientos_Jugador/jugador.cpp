@@ -8,6 +8,225 @@
 #include <queue>
 #include <algorithm>
 
+
+
+void ComportamientoJugador::rellenarVisionCompleta(Sensores sensores)
+{
+	mapaResultado[sensores.posF][sensores.posC] = sensores.terreno[0];
+
+	int contFil = 0;
+	int contCol = 0;
+	int util = 1;
+	int valueY = 0;
+	int valueX = 0;
+	int partialValue = 0;
+	int otherValue = 0;
+
+	switch (sensores.sentido)
+	{
+	case 0:
+
+		contFil = -1;
+		contCol = -1;
+
+		for (int i = 3; i <= 7; i += 2)
+		{
+			for (int j = 0; j < i; j++)
+			{
+				mapaResultado[sensores.posF + contFil][sensores.posC + contCol + j] = sensores.terreno[util];
+				util++;
+			}
+
+			contCol--;
+			contFil--;
+		}
+
+		break;
+
+	case 2:
+
+		contFil = -1;
+		contCol = 1;
+
+		for (int i = 3; i <= 7; i += 2)
+		{
+			for (int j = 0; j < i; j++)
+			{
+				mapaResultado[sensores.posF + contFil + j][sensores.posC + contCol] = sensores.terreno[util];
+				util++;
+			}
+
+			contCol++;
+			contFil--;
+		}
+		break;
+	case 4:
+
+		contFil = 1;
+		contCol = 1;
+
+		for (int i = 3; i <= 7; i += 2)
+		{
+			for (int j = 0; j < i; j++)
+			{
+				mapaResultado[sensores.posF + contFil][sensores.posC + contCol - j] = sensores.terreno[util];
+				util++;
+			}
+
+			contCol++;
+			contFil++;
+		}
+		break;
+
+	case 6:
+
+		contFil = 1;
+		contCol = -1;
+
+		for (int i = 3; i <= 7; i += 2)
+		{
+			for (int j = 0; j < i; j++)
+			{
+				mapaResultado[sensores.posF + contFil - j][sensores.posC + contCol] = sensores.terreno[util];
+				util++;
+			}
+
+			contCol--;
+			contFil++;
+		}
+		break;
+
+
+	case 1:
+
+		valueY = 1;
+		valueX = 0;
+		partialValue = 1;
+
+		for(int i = 3; i <= 7; i+=2){
+			for(int j = 0; j < i; j++){
+				
+				if(j >= partialValue){
+					valueX = valueY;	
+				} 
+
+				mapaResultado[sensores.posF - valueY + otherValue][sensores.posC + valueX] = sensores.terreno[util];
+				util++;
+
+				if(j >= partialValue){
+					otherValue++;
+				}
+
+				valueX++;
+
+			}
+
+			otherValue = 0;
+			partialValue++;	
+			valueY++;
+			valueX = 0;
+		}
+		break;
+
+	case 3:
+
+		valueY = 0;
+		valueX = 1;
+		partialValue = 1;
+
+		for(int i = 3; i <= 7; i+=2){
+			for(int j = 0; j < i; j++){
+				
+				if(j >= partialValue){
+					valueY = valueX;	
+				} 
+
+				mapaResultado[sensores.posF + valueY][sensores.posC + valueX - otherValue] = sensores.terreno[util];
+				util++;
+
+				if(j >= partialValue){
+					otherValue++;
+				}
+
+				valueY++;
+
+			}
+
+			otherValue = 0;
+			partialValue++;	
+			valueY = 0;
+			valueX++;
+		}
+
+		break;
+
+
+	case 5:
+		
+		valueY = 1;
+		valueX = 0;
+		partialValue = 1;
+
+		for(int i = 3; i <= 7; i+=2){
+			for(int j = 0; j < i; j++){
+				
+				if(j >= partialValue){
+					valueX = valueY;	
+				} 
+
+				mapaResultado[sensores.posF + valueY - otherValue][sensores.posC - valueX] = sensores.terreno[util];
+				util++;
+
+				if(j >= partialValue){
+					otherValue++;
+				}
+
+				valueX++;
+
+			}
+
+			otherValue = 0;
+			partialValue++;	
+			valueY++;
+			valueX = 0;
+		}
+
+		break;
+
+	case 7:
+		
+		valueY = 0;
+		valueX = 1;
+		partialValue = 1;
+
+		for(int i = 3; i <= 7; i+=2){
+			for(int j = 0; j < i; j++){
+				
+				if(j >= partialValue){
+					valueY = valueX;	
+				} 
+
+				mapaResultado[sensores.posF - valueY][sensores.posC - valueX  + otherValue] = sensores.terreno[util];
+				util++;
+
+				if(j >= partialValue){
+					otherValue++;
+				}
+
+				valueY++;
+
+			}
+
+			otherValue = 0;
+			partialValue++;	
+			valueY = 0;
+			valueX++;
+		}
+
+		break;
+	}
+}
+
 // Este es el método principal que se piden en la practica.
 // Tiene como entrada la información de los sensores y devuelve la acción a realizar.
 // Para ver los distintos sensores mirar fichero "comportamiento.hpp"
@@ -47,6 +266,11 @@ Action ComportamientoJugador::think(Sensores sensores)
 	else
 	{
 		cout << "No se pudo encontrar plan" << endl;
+	}
+
+	cout << "Orientacion " << sensores.sentido << endl;
+	if(sensores.nivel == 3){
+		rellenarVisionCompleta(sensores);
 	}
 
 	return accion;
@@ -286,8 +510,7 @@ bool ComportamientoJugador::pathFinding(int level, const estado &origen, const l
 		break;
 	case 3:
 		cout << "Reto 1: Descubrir el mapa\n";
-		// Incluir aqui la llamada al algoritmo de busqueda para el Reto 1
-		cout << "No implementado aun\n";
+		return descubrirMapa(origen, plan);
 		break;
 	case 4:
 		cout << "Reto 2: Maximizar objetivos\n";
@@ -309,6 +532,21 @@ bool EsObstaculo(unsigned char casilla)
 	else
 		return false;
 }
+
+bool ComportamientoJugador::descubrirMapa(const estado &origen, list<Action> &plan){
+
+	plan.push_back(actSEMITURN_R);
+	plan.push_back(actSEMITURN_R);
+	plan.push_back(actSEMITURN_R);
+	plan.push_back(actSEMITURN_R);
+	plan.push_back(actSEMITURN_R);
+	plan.push_back(actSEMITURN_R);
+	plan.push_back(actSEMITURN_R);
+
+	return true;
+}
+
+
 
 // Comprueba si la casilla que hay delante es un obstaculo. Si es un
 // obstaculo devuelve true. Si no es un obstaculo, devuelve false y
