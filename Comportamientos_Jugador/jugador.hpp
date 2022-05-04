@@ -29,12 +29,11 @@ class ComportamientoJugador : public Comportamiento {
   public:
     ComportamientoJugador(unsigned int size) : Comportamiento(size) {
       // Inicializar Variables de Estado
-      hayPlan = false;
+      init();
     }
     ComportamientoJugador(std::vector< std::vector< unsigned char> > mapaR) : Comportamiento(mapaR) {
       // Inicializar Variables de Estado
-      hayPlan = false;
-     
+      init();
     }
     ComportamientoJugador(const ComportamientoJugador & comport) : Comportamiento(comport){}
     ~ComportamientoJugador(){}
@@ -50,19 +49,38 @@ class ComportamientoJugador : public Comportamiento {
     list<estado> objetivos;
     list<Action> plan;
     bool hayPlan;
+    pair<int, int> positionToGo;
+    Action ultimaAccion;
+    list<estado> subObjetivos;
+    int costeCosto;
+    int costeAnchura;
+    int activado;
+    int brujula;
+    int fil;
+    int col;
+    bool firstIteration;
+  
+
     // Métodos privados de la clase
+    void init();
+
     bool pathFinding(int level, const estado &origen, const list<estado> &destino, list<Action> &plan);
     bool pathFinding_Profundidad(const estado &origen, const estado &destino, list<Action> &plan);
     bool pathFinding_Anchura(const estado &origen, const estado &destino, list<Action> &plan);
     bool pathFinding_Costo(const estado &origen, const estado &destino, list<Action> &plan);
     bool descubrirMapa(const estado &origen, list<Action> &plan);
 
+    void busquedaPuntoLejano(estado current, int nivel);
 
     int costeCasilla(nodo &a, Action act);
     void rellenarVisionCompleta(Sensores sensores);
+    void actualizarBrujulaPosicion();
+    void actualizarPosicion();
+
 
     void PintaPlan(list<Action> plan);
     bool HayObstaculoDelante(estado &st);
+
 
 };
 
