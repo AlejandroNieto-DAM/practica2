@@ -22,6 +22,7 @@ struct nodo
 	list<Action> secuencia;
 	double path_cost = 0;
   equipamiento eq;
+  int funcion = 0;
 };
 
 
@@ -68,7 +69,10 @@ class ComportamientoJugador : public Comportamiento {
     bool pathFinding_Profundidad(const estado &origen, const estado &destino, list<Action> &plan);
     bool pathFinding_Anchura(const estado &origen, const estado &destino, list<Action> &plan);
     bool pathFinding_Costo(const estado &origen, const estado &destino, list<Action> &plan);
+    bool pathFinding_A(const estado &origen, const estado &destino, list<Action> &plan);
+
     bool descubrirMapa(const estado &origen, list<Action> &plan);
+    void pruebaMapa();
 
     void busquedaPuntoLejano(estado current, int nivel);
 
