@@ -73,6 +73,7 @@ class ComportamientoJugador : public Comportamiento {
 
     bool descubrirMapa(const estado &origen, list<Action> &plan);
     void pruebaMapa();
+    bool posicionNoConviene(estado actual);
 
     void busquedaPuntoLejano(estado current, int nivel);
 
