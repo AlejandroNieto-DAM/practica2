@@ -334,6 +334,8 @@ bool inPoints(estado st, list<estado> &objetivos)
 		cout << "Obj borrado" << endl;
 		objetivos.erase(pos);
 	}
+
+	return encontrado;
 }
 
 bool ComportamientoJugador::posicionNoConviene(estado actual)
@@ -504,14 +506,14 @@ int ComportamientoJugador::costeCasilla(nodo &a, Action act)
 
 	if (mapaResultado[a.st.fila][a.st.columna] == 'K')
 	{
-		a.eq.bikiniOn = true;
-		a.eq.zapatillasOn = false;
+		a.st.bikiniOn = true;
+		a.st.zapatillasOn = false;
 		// cout << "Bikini on suuuuuuuuuuuuu" << endl;
 	}
 	else if (mapaResultado[a.st.fila][a.st.columna] == 'D')
 	{
-		a.eq.bikiniOn = false;
-		a.eq.zapatillasOn = true;
+		a.st.bikiniOn = false;
+		a.st.zapatillasOn = true;
 		// cout << "Zapatillas on suuuuuuuuuuuuu" << endl;
 	}
 
@@ -519,44 +521,12 @@ int ComportamientoJugador::costeCasilla(nodo &a, Action act)
 	{
 
 	case actSEMITURN_L:
-
-		switch (tipoCasilla)
-		{
-		case 'A':
-			if (a.eq.bikiniOn)
-			{
-				costeCasilla = 2;
-			}
-			else
-			{
-				costeCasilla = 300;
-			}
-			break;
-
-		case 'B':
-			if (a.eq.zapatillasOn)
-			{
-				costeCasilla = 1;
-			}
-			else
-			{
-				costeCasilla = 2;
-			}
-			break;
-
-		default:
-			costeCasilla = 1;
-			break;
-		}
-
-		break;
-
 	case actSEMITURN_R:
 
 		switch (tipoCasilla)
 		{
 		case 'A':
-			if (a.eq.bikiniOn)
+			if (a.st.bikiniOn)
 			{
 				costeCasilla = 2;
 			}
@@ -567,7 +537,7 @@ int ComportamientoJugador::costeCasilla(nodo &a, Action act)
 			break;
 
 		case 'B':
-			if (a.eq.zapatillasOn)
+			if (a.st.zapatillasOn)
 			{
 				costeCasilla = 1;
 			}
@@ -585,47 +555,11 @@ int ComportamientoJugador::costeCasilla(nodo &a, Action act)
 		break;
 
 	case actTURN_L:
-
-		switch (tipoCasilla)
-		{
-		case 'A':
-			if (a.eq.bikiniOn)
-			{
-				costeCasilla = 5;
-			}
-			else
-			{
-				costeCasilla = 500;
-			}
-			break;
-
-		case 'B':
-			if (a.eq.zapatillasOn)
-			{
-				costeCasilla = 1;
-			}
-			else
-			{
-				costeCasilla = 3;
-			}
-			break;
-
-		case 'T':
-			costeCasilla = 2;
-			break;
-
-		default:
-			costeCasilla = 1;
-			break;
-		}
-
-		break;
-
 	case actTURN_R:
 		switch (tipoCasilla)
 		{
 		case 'A':
-			if (a.eq.bikiniOn)
+			if (a.st.bikiniOn)
 			{
 				costeCasilla = 5;
 			}
@@ -636,7 +570,7 @@ int ComportamientoJugador::costeCasilla(nodo &a, Action act)
 			break;
 
 		case 'B':
-			if (a.eq.zapatillasOn)
+			if (a.st.zapatillasOn)
 			{
 				costeCasilla = 1;
 			}
@@ -662,7 +596,7 @@ int ComportamientoJugador::costeCasilla(nodo &a, Action act)
 		switch (tipoCasilla)
 		{
 		case 'A':
-			if (a.eq.bikiniOn)
+			if (a.st.bikiniOn)
 			{
 				costeCasilla = 10;
 			}
@@ -673,7 +607,7 @@ int ComportamientoJugador::costeCasilla(nodo &a, Action act)
 			break;
 
 		case 'B':
-			if (a.eq.zapatillasOn)
+			if (a.st.zapatillasOn)
 			{
 				costeCasilla = 15;
 			}
@@ -702,11 +636,13 @@ int ComportamientoJugador::costeCasilla(nodo &a, Action act)
 // Level representa el comportamiento en el que fue iniciado el agente.
 bool ComportamientoJugador::pathFinding(int level, const estado &origen, const list<estado> &destino, list<Action> &plan)
 {
+	estado un_objetivo;
+
 	switch (level)
 	{
 	case 0:
 		cout << "Demo\n";
-		estado un_objetivo;
+		
 		un_objetivo = objetivos.front();
 		cout << "fila: " << un_objetivo.fila << " col:" << un_objetivo.columna << endl;
 		return pathFinding_Profundidad(origen, un_objetivo, plan);
@@ -714,17 +650,15 @@ bool ComportamientoJugador::pathFinding(int level, const estado &origen, const l
 
 	case 1:
 		cout << "Optimo numero de acciones\n";
-		estado un_objetivo1;
-		un_objetivo1 = objetivos.front();
-		cout << "fila: " << un_objetivo1.fila << " col:" << un_objetivo1.columna << endl;
-		return pathFinding_Anchura(origen, un_objetivo1, plan);
+		un_objetivo = objetivos.front();
+		cout << "fila: " << un_objetivo.fila << " col:" << un_objetivo.columna << endl;
+		return pathFinding_Anchura(origen, un_objetivo, plan);
 		break;
 	case 2:
 		cout << "Optimo en coste\n";
-		estado un_objetivo2;
-		un_objetivo2 = objetivos.front();
-		cout << "fila: " << un_objetivo2.fila << " col:" << un_objetivo2.columna << endl;
-		return pathFinding_A(origen, un_objetivo2, plan);
+		un_objetivo = objetivos.front();
+		cout << "fila: " << un_objetivo.fila << " col:" << un_objetivo.columna << endl;
+		return pathFinding_A(origen, un_objetivo, plan);
 		break;
 	case 3:
 		cout << "Reto 1: Descubrir el mapa\n";
@@ -970,7 +904,7 @@ void nodoConMenorCoste(list<nodo> &frontier, nodo a)
 	for (it = frontier.begin(); it != frontier.end(); ++it)
 	{
 		if (a.st.fila == it->st.fila and a.st.columna == it->st.columna and a.st.orientacion == it->st.orientacion 
-		and a.eq.zapatillasOn == it->eq.zapatillasOn and a.eq.bikiniOn == it->eq.bikiniOn)
+		and a.st.zapatillasOn == it->st.zapatillasOn and a.st.bikiniOn == it->st.bikiniOn)
 		{
 
 			if (a.funcion < it->funcion)
@@ -1026,12 +960,12 @@ int ComportamientoJugador::distanceToGoal(nodo current, estado goal)
 		minSteps = colDifference;
 	}
 
-	if (current.eq.zapatillasOn and mapaResultado[goal.fila][goal.columna] == 'B')
+	if (current.st.zapatillasOn and mapaResultado[goal.fila][goal.columna] == 'B')
 	{
 		minSteps -= 75;
 	}
 
-	if(current.eq.bikiniOn and mapaResultado[goal.fila][goal.columna] == 'A'){
+	if(current.st.bikiniOn and mapaResultado[goal.fila][goal.columna] == 'A'){
 		minSteps -= 75;
 	}
 
