@@ -20,9 +20,12 @@ struct nodo
 {
 	estado st;
 	list<Action> secuencia;
+  list<nodo> hijos;
+  nodo * mejor_padre;
 	double path_cost = 0;
   equipamiento eq;
   int funcion = 0;
+  int h = 0;
 };
 
 
@@ -74,6 +77,7 @@ class ComportamientoJugador : public Comportamiento {
     bool descubrirMapa(const estado &origen, list<Action> &plan);
     void pruebaMapa();
     bool posicionNoConviene(estado actual);
+int distanceToGoal(nodo current, estado goal);
 
     void busquedaPuntoLejano(estado current, int nivel);
 

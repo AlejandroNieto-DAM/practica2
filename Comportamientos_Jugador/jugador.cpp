@@ -315,23 +315,25 @@ void ComportamientoJugador::rellenarVisionCompleta(Sensores sensores)
 	}
 }
 
-bool inPoints(estado st, list<estado> &objetivos){
+bool inPoints(estado st, list<estado> &objetivos)
+{
 	list<estado>::iterator it;
 	list<estado>::iterator pos;
 	bool encontrado = false;
-	for(it = objetivos.begin(); it != objetivos.end() and encontrado == false; ++it){
-		if(st.fila == (*it).fila and st.columna == (*it).columna){
+	for (it = objetivos.begin(); it != objetivos.end() and encontrado == false; ++it)
+	{
+		if (st.fila == (*it).fila and st.columna == (*it).columna)
+		{
 			encontrado = true;
 			pos = it;
 		}
 	}
 
-	if(encontrado == true){
+	if (encontrado == true)
+	{
 		cout << "Obj borrado" << endl;
 		objetivos.erase(pos);
 	}
-	
-
 }
 
 bool ComportamientoJugador::posicionNoConviene(estado actual)
@@ -370,13 +372,14 @@ bool ComportamientoJugador::posicionNoConviene(estado actual)
 	}
 
 	bool noConviente = false;
-	switch(mapaResultado[actual.fila][actual.columna]){
-		case 'B':
-		case 'A':
-		case 'M':
-		case 'P':
-			noConviente = true;
-			break;
+	switch (mapaResultado[actual.fila][actual.columna])
+	{
+	case 'B':
+	case 'A':
+	case 'M':
+	case 'P':
+		noConviente = true;
+		break;
 	}
 
 	return noConviente;
@@ -435,7 +438,8 @@ Action ComportamientoJugador::think(Sensores sensores)
 		objetivos.push_back(aux);
 	}
 
-	if(subObjetivos.size() == 0){
+	if (subObjetivos.size() == 0)
+	{
 		subObjetivos = objetivos;
 	}
 
@@ -456,11 +460,10 @@ Action ComportamientoJugador::think(Sensores sensores)
 	{
 		if (!hayPlan or (plan.front() == actFORWARD and posicionNoConviene(actual)))
 			hayPlan = pathFinding(sensores.nivel, actual, objetivos, plan);
-
 	}
 	else if (sensores.nivel == 3)
 	{
-		
+
 		if (!hayPlan or (plan.front() == actFORWARD and posicionNoConviene(actual)))
 		{
 			cout << "Entramos al plan" << endl;
@@ -492,7 +495,6 @@ Action ComportamientoJugador::think(Sensores sensores)
 	return accion;
 }
 
-
 int ComportamientoJugador::costeCasilla(nodo &a, Action act)
 {
 
@@ -506,8 +508,7 @@ int ComportamientoJugador::costeCasilla(nodo &a, Action act)
 		a.eq.zapatillasOn = false;
 		// cout << "Bikini on suuuuuuuuuuuuu" << endl;
 	}
-
-	if (mapaResultado[a.st.fila][a.st.columna] == 'D')
+	else if (mapaResultado[a.st.fila][a.st.columna] == 'D')
 	{
 		a.eq.bikiniOn = false;
 		a.eq.zapatillasOn = true;
@@ -697,8 +698,6 @@ int ComportamientoJugador::costeCasilla(nodo &a, Action act)
 	return costeCasilla;
 }
 
-
-
 // Llama al algoritmo de busqueda que se usara en cada comportamiento del agente
 // Level representa el comportamiento en el que fue iniciado el agente.
 bool ComportamientoJugador::pathFinding(int level, const estado &origen, const list<estado> &destino, list<Action> &plan)
@@ -740,15 +739,12 @@ bool ComportamientoJugador::pathFinding(int level, const estado &origen, const l
 
 	case 4:
 		cout << "Reto 2: Maximizar objetivos\n";
-		
 
 		return descubrirMapa(origen, plan);
 		break;
 	}
 	return false;
 }
-
-
 
 //---------------------- Implementación de la busqueda en profundidad ---------------------------
 
@@ -767,7 +763,6 @@ void ComportamientoJugador::busquedaPuntoLejano(estado current, int nivel)
 
 	bool encontrado = false;
 	estado aux;
-	
 
 	if (nivel == 4)
 	{
@@ -963,43 +958,6 @@ bool ComparaFuncion(const nodo &a, const nodo &n)
 	return a.funcion < n.funcion;
 }
 
-void nodoConMayorCoste(list<nodo> &frontier, nodo a)
-{
-
-	frontier.sort(ComparaCostes);
-
-	vector<list<nodo>::iterator> toDelete;
-	list<nodo>::iterator it;
-	bool firstMinor = false;
-
-	for (it = frontier.begin(); it != frontier.end(); ++it)
-	{
-		if (a.st.fila == it->st.fila and a.st.columna == it->st.columna and a.st.orientacion == it->st.orientacion)
-		{
-
-			if (a.path_cost < it->path_cost)
-			{
-				*it = a;
-			}
-
-			if (firstMinor)
-			{
-				toDelete.push_back(it);
-			}
-
-			firstMinor = true;
-		}
-	}
-
-	if (toDelete.size() > 0)
-	{
-		for (int i = 0; i < toDelete.size(); i++)
-		{
-			frontier.erase(toDelete[i]);
-		}
-	}
-}
-
 void nodoConMenorCoste(list<nodo> &frontier, nodo a)
 {
 
@@ -1011,7 +969,8 @@ void nodoConMenorCoste(list<nodo> &frontier, nodo a)
 
 	for (it = frontier.begin(); it != frontier.end(); ++it)
 	{
-		if (a.st.fila == it->st.fila and a.st.columna == it->st.columna and a.st.orientacion == it->st.orientacion)
+		if (a.st.fila == it->st.fila and a.st.columna == it->st.columna and a.st.orientacion == it->st.orientacion 
+		and a.eq.zapatillasOn == it->eq.zapatillasOn and a.eq.bikiniOn == it->eq.bikiniOn)
 		{
 
 			if (a.funcion < it->funcion)
@@ -1037,34 +996,43 @@ void nodoConMenorCoste(list<nodo> &frontier, nodo a)
 	}
 }
 
-int distanceToGoal(estado current, estado goal)
+int ComportamientoJugador::distanceToGoal(nodo current, estado goal)
 {
 	int minSteps = 0;
 	int rowDifference = 0;
 	int colDifference = 0;
 
-	if (goal.fila < current.fila)
+	if (goal.fila < current.st.fila)
 	{
-		rowDifference = current.fila - goal.fila;
+		rowDifference = current.st.fila - goal.fila;
 	}
 	else
 	{
-		rowDifference = goal.fila - current.fila;
+		rowDifference = goal.fila - current.st.fila;
 	}
 
-	if (goal.columna < current.columna)
+	if (goal.columna < current.st.columna)
 	{
-		colDifference = current.columna - goal.columna;
+		colDifference = current.st.columna - goal.columna;
 	}
 	else
 	{
-		colDifference = goal.columna - current.columna;
+		colDifference = goal.columna - current.st.columna;
 	}
 
 	minSteps = rowDifference;
 	if (colDifference > rowDifference)
 	{
 		minSteps = colDifference;
+	}
+
+	if (current.eq.zapatillasOn and mapaResultado[goal.fila][goal.columna] == 'B')
+	{
+		minSteps -= 75;
+	}
+
+	if(current.eq.bikiniOn and mapaResultado[goal.fila][goal.columna] == 'A'){
+		minSteps -= 75;
 	}
 
 	return minSteps;
@@ -1084,7 +1052,7 @@ bool ComportamientoJugador::pathFinding_A(const estado &origen, const estado &de
 	nodo current;
 	current.st = origen;
 	current.path_cost = 0;
-	current.funcion = current.path_cost + distanceToGoal(current.st, destino);
+	current.funcion = current.path_cost;
 	current.secuencia.empty();
 
 	frontier.push_back(current);
@@ -1097,11 +1065,26 @@ bool ComportamientoJugador::pathFinding_A(const estado &origen, const estado &de
 		frontier.erase(frontier.begin());
 		explored.insert(current.st);
 
+		// Generar descendiente de avanzar
+		nodo hijoForward = current;
+		if (!HayObstaculoDelante(hijoForward.st))
+		{
+			hijoForward.path_cost += costeCasilla(hijoForward, actFORWARD);
+			hijoForward.funcion = hijoForward.path_cost + distanceToGoal(hijoForward, destino);
+
+			if (explored.find(hijoForward.st) == explored.end())
+			{
+				hijoForward.secuencia.push_back(actFORWARD);
+				frontier.push_back(hijoForward);
+				nodoConMenorCoste(frontier, hijoForward);
+			}
+		}
+
 		// Generar descendiente de girar a la derecha 90 grados
 		nodo hijoTurnR = current;
 		hijoTurnR.st.orientacion = (hijoTurnR.st.orientacion + 2) % 8;
 		hijoTurnR.path_cost += costeCasilla(hijoTurnR, actTURN_R);
-		hijoTurnR.funcion = hijoTurnR.path_cost + distanceToGoal(hijoTurnR.st, destino);
+		hijoTurnR.funcion = hijoTurnR.path_cost + distanceToGoal(hijoTurnR, destino);
 
 		if (explored.find(hijoTurnR.st) == explored.end())
 		{
@@ -1114,7 +1097,7 @@ bool ComportamientoJugador::pathFinding_A(const estado &origen, const estado &de
 		nodo hijoTurnL = current;
 		hijoTurnL.st.orientacion = (hijoTurnL.st.orientacion + 6) % 8;
 		hijoTurnL.path_cost += costeCasilla(hijoTurnL, actTURN_L);
-		hijoTurnL.funcion = hijoTurnL.path_cost + distanceToGoal(hijoTurnL.st, destino);
+		hijoTurnL.funcion = hijoTurnL.path_cost + distanceToGoal(hijoTurnL, destino);
 
 		if (explored.find(hijoTurnL.st) == explored.end())
 		{
@@ -1127,7 +1110,7 @@ bool ComportamientoJugador::pathFinding_A(const estado &origen, const estado &de
 		nodo hijoSEMITurnR = current;
 		hijoSEMITurnR.st.orientacion = (hijoSEMITurnR.st.orientacion + 1) % 8;
 		hijoSEMITurnR.path_cost += costeCasilla(hijoSEMITurnR, actSEMITURN_R);
-		hijoSEMITurnR.funcion = hijoSEMITurnR.path_cost + distanceToGoal(hijoSEMITurnR.st, destino);
+		hijoSEMITurnR.funcion = hijoSEMITurnR.path_cost + distanceToGoal(hijoSEMITurnR, destino);
 
 		if (explored.find(hijoSEMITurnR.st) == explored.end())
 		{
@@ -1140,7 +1123,7 @@ bool ComportamientoJugador::pathFinding_A(const estado &origen, const estado &de
 		nodo hijoSEMITurnL = current;
 		hijoSEMITurnL.st.orientacion = (hijoSEMITurnL.st.orientacion + 7) % 8;
 		hijoSEMITurnL.path_cost += costeCasilla(hijoSEMITurnL, actSEMITURN_L);
-		hijoSEMITurnL.funcion = hijoSEMITurnL.path_cost + distanceToGoal(hijoSEMITurnL.st, destino);
+		hijoSEMITurnL.funcion = hijoSEMITurnL.path_cost + distanceToGoal(hijoSEMITurnL, destino);
 
 		if (explored.find(hijoSEMITurnL.st) == explored.end())
 		{
@@ -1149,127 +1132,7 @@ bool ComportamientoJugador::pathFinding_A(const estado &origen, const estado &de
 			nodoConMenorCoste(frontier, hijoSEMITurnL);
 		}
 
-		// Generar descendiente de avanzar
-		nodo hijoForward = current;
-		if (!HayObstaculoDelante(hijoForward.st))
-		{
-			hijoForward.path_cost += costeCasilla(hijoForward, actFORWARD);
-			hijoForward.funcion = hijoForward.path_cost + distanceToGoal(hijoForward.st, destino);
-
-			if (explored.find(hijoForward.st) == explored.end())
-			{
-				hijoForward.secuencia.push_back(actFORWARD);
-				frontier.push_back(hijoForward);
-				nodoConMenorCoste(frontier, hijoForward);
-			}
-		}
-
 		frontier.sort(ComparaFuncion);
-	}
-
-	cout << "Terminada la busqueda\n";
-
-	if (current.st.fila == destino.fila and current.st.columna == destino.columna)
-	{
-		cout << "Cargando el plan\n";
-		plan = current.secuencia;
-		// cout << "Longitud del plan: " << plan.size() << endl;
-		// cout << "Coste del plan = " << current.path_cost << endl;
-		PintaPlan(plan);
-		//  ver el plan en el mapa
-		VisualizaPlan(origen, plan);
-		return true;
-	}
-	else
-	{
-		cout << "No encontrado plan\n";
-	}
-
-	return false;
-}
-
-bool ComportamientoJugador::pathFinding_Costo(const estado &origen, const estado &destino, list<Action> &plan)
-{
-	// Borro la lista
-	cout << "Calculando plan\n";
-	plan.clear();
-	set<estado, ComparaEstados> explored; // Lista de Cerrados
-
-	list<nodo> frontier; // Lista de Abiertos
-
-	nodo current;
-	current.st = origen;
-	current.path_cost = 0;
-	current.secuencia.empty();
-
-	frontier.push_back(current);
-
-	while (!frontier.empty() and (current.st.fila != destino.fila or current.st.columna != destino.columna))
-	{
-		// cout << "List size: " << frontier.size() << " " << frontier.front().path_cost << " " << frontier.back().path_cost << endl;
-
-		current = frontier.front();
-		frontier.erase(frontier.begin());
-		explored.insert(current.st);
-
-		// Generar descendiente de girar a la derecha 90 grados
-		nodo hijoTurnR = current;
-		hijoTurnR.st.orientacion = (hijoTurnR.st.orientacion + 2) % 8;
-		hijoTurnR.path_cost += costeCasilla(hijoTurnR, actTURN_R);
-		if (explored.find(hijoTurnR.st) == explored.end())
-		{
-			hijoTurnR.secuencia.push_back(actTURN_R);
-			frontier.push_back(hijoTurnR);
-			nodoConMayorCoste(frontier, hijoTurnR);
-		}
-
-		// Generar descendiente de girar a la izquierda 90 grados
-		nodo hijoTurnL = current;
-		hijoTurnL.st.orientacion = (hijoTurnL.st.orientacion + 6) % 8;
-		hijoTurnL.path_cost += costeCasilla(hijoTurnL, actTURN_L);
-		if (explored.find(hijoTurnL.st) == explored.end())
-		{
-			hijoTurnL.secuencia.push_back(actTURN_L);
-			frontier.push_back(hijoTurnL);
-			nodoConMayorCoste(frontier, hijoTurnL);
-		}
-
-		// Generar descendiente de girar a la derecha 45 grados
-		nodo hijoSEMITurnR = current;
-		hijoSEMITurnR.st.orientacion = (hijoSEMITurnR.st.orientacion + 1) % 8;
-		hijoSEMITurnR.path_cost += costeCasilla(hijoSEMITurnR, actSEMITURN_R);
-		if (explored.find(hijoSEMITurnR.st) == explored.end())
-		{
-			hijoSEMITurnR.secuencia.push_back(actSEMITURN_R);
-			frontier.push_back(hijoSEMITurnR);
-			nodoConMayorCoste(frontier, hijoSEMITurnR);
-		}
-
-		// Generar descendiente de girar a la izquierda 45 grados
-		nodo hijoSEMITurnL = current;
-		hijoSEMITurnL.st.orientacion = (hijoSEMITurnL.st.orientacion + 7) % 8;
-		hijoSEMITurnL.path_cost += costeCasilla(hijoSEMITurnL, actSEMITURN_L);
-		if (explored.find(hijoSEMITurnL.st) == explored.end())
-		{
-			hijoSEMITurnL.secuencia.push_back(actSEMITURN_L);
-			frontier.push_back(hijoSEMITurnL);
-			nodoConMayorCoste(frontier, hijoSEMITurnL);
-		}
-
-		// Generar descendiente de avanzar
-		nodo hijoForward = current;
-		if (!HayObstaculoDelante(hijoForward.st))
-		{
-			hijoForward.path_cost += costeCasilla(hijoForward, actFORWARD);
-			if (explored.find(hijoForward.st) == explored.end())
-			{
-				hijoForward.secuencia.push_back(actFORWARD);
-				frontier.push_back(hijoForward);
-				nodoConMayorCoste(frontier, hijoForward);
-			}
-		}
-
-		frontier.sort(ComparaCostes);
 	}
 
 	cout << "Terminada la busqueda\n";
@@ -1314,6 +1177,19 @@ bool ComportamientoJugador::pathFinding_Anchura(const estado &origen, const esta
 		frontier.pop();
 		explored.insert(current.st);
 
+		// Generar descendiente de avanzar
+		nodo hijoForward = current;
+		if (!HayObstaculoDelante(hijoForward.st))
+		{
+
+			hijoForward.path_cost += costeCasilla(hijoForward, actFORWARD);
+			if (explored.find(hijoForward.st) == explored.end())
+			{
+				hijoForward.secuencia.push_back(actFORWARD);
+				frontier.push(hijoForward);
+			}
+		}
+
 		// Generar descendiente de girar a la derecha 90 grados
 		nodo hijoTurnR = current;
 		hijoTurnR.st.orientacion = (hijoTurnR.st.orientacion + 2) % 8;
@@ -1352,19 +1228,6 @@ bool ComportamientoJugador::pathFinding_Anchura(const estado &origen, const esta
 		{
 			hijoSEMITurnL.secuencia.push_back(actSEMITURN_L);
 			frontier.push(hijoSEMITurnL);
-		}
-
-		// Generar descendiente de avanzar
-		nodo hijoForward = current;
-		if (!HayObstaculoDelante(hijoForward.st))
-		{
-
-			hijoForward.path_cost += costeCasilla(hijoForward, actFORWARD);
-			if (explored.find(hijoForward.st) == explored.end())
-			{
-				hijoForward.secuencia.push_back(actFORWARD);
-				frontier.push(hijoForward);
-			}
 		}
 	}
 
