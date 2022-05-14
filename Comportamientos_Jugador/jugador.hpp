@@ -43,6 +43,7 @@ class ComportamientoJugador : public Comportamiento {
   private:
     // Declarar Variables de Estado
     estado actual;
+    estado anterior;
     list<estado> objetivos;
     list<Action> plan;
     bool hayPlan;
@@ -64,20 +65,21 @@ class ComportamientoJugador : public Comportamiento {
     bool pathFinding(int level, const estado &origen, const list<estado> &destino, list<Action> &plan);
     bool pathFinding_Profundidad(const estado &origen, const estado &destino, list<Action> &plan);
     bool pathFinding_Anchura(const estado &origen, const estado &destino, list<Action> &plan);
-    bool pathFinding_Costo(const estado &origen, const estado &destino, list<Action> &plan);
     bool pathFinding_A(const estado &origen, const estado &destino, list<Action> &plan);
 
     bool descubrirMapa(const estado &origen, list<Action> &plan);
-    void pruebaMapa();
+  
     bool posicionNoConviene(estado actual);
     int distanceToGoal(nodo current, estado goal);
-
     void busquedaPuntoLejano(estado current, int nivel);
 
     int costeCasilla(nodo &a, Action act);
     void rellenarVisionCompleta(Sensores sensores);
     void actualizarBrujulaPosicion();
     void actualizarPosicion();
+
+    bool descubrirMapaNvl3(const estado &origen, list<Action> &plan);
+    bool inTablero(estado position);
 
     pair<int, int> findCasilla(char type);
 
