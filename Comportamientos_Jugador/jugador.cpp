@@ -373,19 +373,43 @@ bool ComportamientoJugador::posicionNoConviene(estado actual)
 		break;
 	}
 
-	bool noConviente = false;
+	bool noConviene = false;
 	switch (mapaResultado[actual.fila][actual.columna])
 	{
 	case 'B':
+		if(actual.equip != 1){
+			noConviene = true;
+		}
+		break;
 	case 'A':
+		if(actual.equip != 2){
+			noConviene = true;
+		}
+		break;
 	case 'M':
 	case 'P':
-		noConviente = true;
+	case 'a':
+	case 'l':
+		noConviene = true;
 		break;
 	}
 
-	return noConviente;
+	return noConviene;
 }
+
+pair<int, int> ComportamientoJugador::findCasilla(char type){
+	for(int i = 3; i < mapaResultado.size() - 4; i++){
+		for(int j = 3; j < mapaResultado.size() - 4; j++){
+			if(mapaResultado[i][j] == type){
+				return pair<int,int>(i, j);
+			}
+		} 
+	}
+
+	return pair<int,int>(-1, -1);
+}
+
+
 // Este es el método principal que se piden en la practica.
 // Tiene como entrada la información de los sensores y devuelve la acción a realizar.
 // Para ver los distintos sensores mirar fichero "comportamiento.hpp"
@@ -393,13 +417,14 @@ Action ComportamientoJugador::think(Sensores sensores)
 {
 	Action accion = actWHEREIS;
 
-	if (sensores.nivel == 4 and sensores.colision == true)
+	if (sensores.nivel == 4 and sensores.colision == true or sensores.reset == 1)
 	{
 		accion = actWHEREIS;
 		plan.clear();
-		subObjetivos.clear();
-		activado = false;
+		activado = true;
 		firstIteration = false;
+		return accion;
+		cout << "Reset " << endl;
 	}
 
 	if (activado and sensores.nivel == 4 and firstIteration and sensores.colision == false)
@@ -412,7 +437,6 @@ Action ComportamientoJugador::think(Sensores sensores)
 	if (sensores.nivel <= 3 or (sensores.nivel == 4 and !firstIteration and activado))
 	{
 
-		cout << "Entrooo" << endl;
 		actual.fila = sensores.posF;
 		actual.columna = sensores.posC;
 		actual.orientacion = sensores.sentido;
@@ -420,14 +444,21 @@ Action ComportamientoJugador::think(Sensores sensores)
 		firstIteration = true;
 	}
 
+	if(sensores.nivel <= 3 or (sensores.nivel == 4 and activado)){
+		if(mapaResultado[actual.fila][actual.columna] == 'D'){
+			actual.equip = 1;
+		}
+
+		if(mapaResultado[actual.fila][actual.columna] == 'K'){
+			actual.equip = 2;
+		}
+	} 
+
 	cout << "Fila: " << actual.fila << endl;
 	cout << "Col : " << actual.columna << endl;
 	cout << "Ori : " << actual.orientacion << endl;
 
-	if (sensores.reset == 1)
-	{
-		hayPlan = false;
-	}
+	
 
 	// Capturo los destinos
 
@@ -440,15 +471,56 @@ Action ComportamientoJugador::think(Sensores sensores)
 		objetivos.push_back(aux);
 	}
 
-	if (subObjetivos.size() == 0)
+	cout << "Objetivo primero = " << objetivos.front().fila << " " << objetivos.front().columna << endl;
+	cout << "Subobjetivos size = " << subObjetivos.size() << endl;
+
+	if (sensores.nivel == 4 and subObjetivos.size() == 0)
 	{
 		subObjetivos = objetivos;
 	}
 
-	if (inPoints(actual, subObjetivos))
+	if ((sensores.nivel == 4 and inPoints(actual, subObjetivos)) or (sensores.nivel == 4 and positionToGo.first > -1))
 	{
 		positionToGo.first = subObjetivos.front().fila;
 		positionToGo.second = subObjetivos.front().columna;
+	}
+
+	
+	if(hayPlan and mapaResultado[actual.fila][actual.columna] == 'B' and actual.equip != 1 and sensores.nivel >= 3){
+		pair<int, int> posicionZapatillas = findCasilla('D');
+		if(posicionZapatillas.first != -1){
+			estado goal;
+			goal.fila = posicionZapatillas.first;
+			goal.columna = posicionZapatillas.second;
+
+			hayPlan = pathFinding_A(actual, goal, plan);
+		}
+	}
+
+	if(hayPlan and mapaResultado[actual.fila][actual.columna] == 'A' and actual.equip != 2 and sensores.nivel >= 3){
+		pair<int, int> posicionBikini = findCasilla('K');
+		if(posicionBikini.first != -1){
+			estado goal;
+			goal.fila = posicionBikini.first;
+			goal.columna = posicionBikini.second;
+
+			hayPlan = pathFinding_A(actual, goal, plan);
+		}
+	}
+
+	if(hayPlan and sensores.bateria < 1000 and sensores.nivel >= 3){
+		pair<int, int> posicionRecarga = findCasilla('X');
+		if(posicionRecarga.first != -1){
+			estado goal;
+			goal.fila = posicionRecarga.first;
+			goal.columna = posicionRecarga.second;
+
+			hayPlan = pathFinding_A(actual, goal, plan);
+
+			for(int i = 0; i < 100; i++){
+				plan.push_back(actIDLE);
+			} 
+		}
 	}
 
 	if (sensores.nivel < 3)
@@ -460,15 +532,14 @@ Action ComportamientoJugador::think(Sensores sensores)
 	}
 	else if (sensores.nivel == 4 and activado)
 	{
-		if (!hayPlan or (plan.front() == actFORWARD and posicionNoConviene(actual)))
+		if (!hayPlan or (plan.front() == actFORWARD and posicionNoConviene(actual))){
 			hayPlan = pathFinding(sensores.nivel, actual, objetivos, plan);
+		}		
 	}
 	else if (sensores.nivel == 3)
 	{
-
 		if (!hayPlan or (plan.front() == actFORWARD and posicionNoConviene(actual)))
 		{
-			cout << "Entramos al plan" << endl;
 			hayPlan = pathFinding(sensores.nivel, actual, objetivos, plan);
 		}
 	}
@@ -504,19 +575,6 @@ int ComportamientoJugador::costeCasilla(nodo &a, Action act)
 
 	int costeCasilla = 1;
 
-	if (mapaResultado[a.st.fila][a.st.columna] == 'K')
-	{
-		a.st.bikiniOn = true;
-		a.st.zapatillasOn = false;
-		// cout << "Bikini on suuuuuuuuuuuuu" << endl;
-	}
-	else if (mapaResultado[a.st.fila][a.st.columna] == 'D')
-	{
-		a.st.bikiniOn = false;
-		a.st.zapatillasOn = true;
-		// cout << "Zapatillas on suuuuuuuuuuuuu" << endl;
-	}
-
 	switch (act)
 	{
 
@@ -526,7 +584,7 @@ int ComportamientoJugador::costeCasilla(nodo &a, Action act)
 		switch (tipoCasilla)
 		{
 		case 'A':
-			if (a.st.bikiniOn)
+			if (a.st.equip == 2)
 			{
 				costeCasilla = 2;
 			}
@@ -537,7 +595,7 @@ int ComportamientoJugador::costeCasilla(nodo &a, Action act)
 			break;
 
 		case 'B':
-			if (a.st.zapatillasOn)
+			if (a.st.equip == 1)
 			{
 				costeCasilla = 1;
 			}
@@ -559,7 +617,7 @@ int ComportamientoJugador::costeCasilla(nodo &a, Action act)
 		switch (tipoCasilla)
 		{
 		case 'A':
-			if (a.st.bikiniOn)
+			if (a.st.equip == 2)
 			{
 				costeCasilla = 5;
 			}
@@ -570,7 +628,7 @@ int ComportamientoJugador::costeCasilla(nodo &a, Action act)
 			break;
 
 		case 'B':
-			if (a.st.zapatillasOn)
+			if (a.st.equip == 1)
 			{
 				costeCasilla = 1;
 			}
@@ -596,7 +654,7 @@ int ComportamientoJugador::costeCasilla(nodo &a, Action act)
 		switch (tipoCasilla)
 		{
 		case 'A':
-			if (a.st.bikiniOn)
+			if (a.st.equip == 2)
 			{
 				costeCasilla = 10;
 			}
@@ -607,7 +665,7 @@ int ComportamientoJugador::costeCasilla(nodo &a, Action act)
 			break;
 
 		case 'B':
-			if (a.st.zapatillasOn)
+			if (a.st.equip == 1)
 			{
 				costeCasilla = 15;
 			}
@@ -642,7 +700,7 @@ bool ComportamientoJugador::pathFinding(int level, const estado &origen, const l
 	{
 	case 0:
 		cout << "Demo\n";
-		
+
 		un_objetivo = objetivos.front();
 		cout << "fila: " << un_objetivo.fila << " col:" << un_objetivo.columna << endl;
 		return pathFinding_Profundidad(origen, un_objetivo, plan);
@@ -662,19 +720,27 @@ bool ComportamientoJugador::pathFinding(int level, const estado &origen, const l
 		break;
 	case 3:
 		cout << "Reto 1: Descubrir el mapa\n";
-		if (mapaResultado[positionToGo.first][positionToGo.second] != '?')
+		if (positionToGo.first != -1 and positionToGo.second != -1)
 		{
-			positionToGo.first = -1;
-			positionToGo.second = -1;
-			busquedaPuntoLejano(origen, level);
+			if (mapaResultado[positionToGo.first][positionToGo.second] != '?')
+			{
+					positionToGo.first = -1;
+					positionToGo.second = -1;
+					busquedaPuntoLejano(origen, level);		
+			}
+
+			return descubrirMapa(origen, plan);
 		}
-		return descubrirMapa(origen, plan);
+
 		break;
 
 	case 4:
 		cout << "Reto 2: Maximizar objetivos\n";
-
-		return descubrirMapa(origen, plan);
+		if (positionToGo.first > 0 and positionToGo.second > 0)
+		{
+			return descubrirMapa(origen, plan);
+		}
+		return false;
 		break;
 	}
 	return false;
@@ -698,12 +764,6 @@ void ComportamientoJugador::busquedaPuntoLejano(estado current, int nivel)
 	bool encontrado = false;
 	estado aux;
 
-	if (nivel == 4)
-	{
-		positionToGo.first = objetivos.front().fila;
-		positionToGo.second = objetivos.front().columna;
-	}
-
 	switch (current.orientacion)
 	{
 
@@ -711,21 +771,21 @@ void ComportamientoJugador::busquedaPuntoLejano(estado current, int nivel)
 	case 1:
 	case 7:
 
-		if (nivel == 3)
+		
+		for (int i = 3; i < mapaResultado.size() - 3 and encontrado == false; i++)
 		{
-			for (int i = 3; i < mapaResultado.size() - 4 and encontrado == false; i++)
+			for (int j = 3; j < mapaResultado.size() - 3 and encontrado == false; j++)
 			{
-				for (int j = 3; j < mapaResultado.size() - 4 and encontrado == false; j++)
+				if (mapaResultado[i][j] == '?')
 				{
-					if (mapaResultado[i][j] == '?')
-					{
-						encontrado = true;
-						positionToGo.first = i;
-						positionToGo.second = j;
-					}
+					encontrado = true;
+					positionToGo.first = i;
+					positionToGo.second = j;
 				}
 			}
 		}
+		
+		
 
 		break;
 
@@ -733,57 +793,52 @@ void ComportamientoJugador::busquedaPuntoLejano(estado current, int nivel)
 	case 4:
 	case 5:
 
-		if (nivel == 3)
+		for (int i = mapaResultado.size() - 4; i >= 3 and encontrado == false; i--)
 		{
-			for (int i = mapaResultado.size() - 4; i >= 3 and encontrado == false; i--)
+			for (int j = mapaResultado.size() - 4; j >= 3 and encontrado == false; j--)
 			{
-				for (int j = mapaResultado.size() - 4; j >= 3 and encontrado == false; j--)
+				if (mapaResultado[i][j] == '?')
 				{
-					if (mapaResultado[i][j] == '?')
-					{
-						encontrado = true;
-						positionToGo.first = i;
-						positionToGo.second = j;
-					}
+					encontrado = true;
+					positionToGo.first = i;
+					positionToGo.second = j;
 				}
 			}
 		}
 
+		
 		break;
 
 	case 2:
-		if (nivel == 3)
+		
+		for (int i = mapaResultado.size() - 4; i >= 3 and encontrado == false; i--)
 		{
-			for (int i = mapaResultado.size() - 4; i >= 3 and encontrado == false; i--)
+			for (int j = 3; j < mapaResultado.size() - 3 and encontrado == false; j++)
 			{
-				for (int j = 3; j < mapaResultado.size() - 4 and encontrado == false; j++)
+				if (mapaResultado[j][i] == '?')
 				{
-					if (mapaResultado[j][i] == '?')
-					{
-						encontrado = true;
-						positionToGo.first = j;
-						positionToGo.second = i;
-					}
+					encontrado = true;
+					positionToGo.first = j;
+					positionToGo.second = i;
 				}
 			}
 		}
 
+		
 		break;
 
 	case 6:
 
-		if (nivel == 3)
+		
+		for (int i = 3; i < mapaResultado.size() - 3 and encontrado == false; i++)
 		{
-			for (int i = 3; i < mapaResultado.size() - 4 and encontrado == false; i++)
+			for (int j = mapaResultado.size() - 4; j >= 3 and encontrado == false; j--)
 			{
-				for (int j = mapaResultado.size() - 4; j >= 3 and encontrado == false; j--)
+				if (mapaResultado[j][i] == '?')
 				{
-					if (mapaResultado[j][i] == '?')
-					{
-						encontrado = true;
-						positionToGo.first = j;
-						positionToGo.second = i;
-					}
+					encontrado = true;
+					positionToGo.first = j;
+					positionToGo.second = i;
 				}
 			}
 		}
@@ -800,6 +855,10 @@ bool ComportamientoJugador::descubrirMapa(const estado &origen, list<Action> &pl
 	destino.columna = positionToGo.second;
 
 	cout << "Position to go " << destino.fila << " " << destino.columna << endl;
+	if (destino.fila == -1 and destino.columna == -1)
+	{
+		return false;
+	}
 
 	pathFinding_A(origen, destino, plan);
 
@@ -882,6 +941,19 @@ struct ComparaEstados
 	}
 };
 
+struct ComparaEstadosNivel2
+{
+	bool operator()(const estado &a, const estado &n) const
+	{
+		if ((a.fila > n.fila) or (a.fila == n.fila and a.columna > n.columna) or
+			(a.fila == n.fila and a.columna == n.columna and a.orientacion > n.orientacion) or
+			(a.fila == n.fila and a.columna == n.columna and a.orientacion == n.orientacion and a.equip > n.equip))
+			return true;
+		else
+			return false;
+	}
+};
+
 bool ComparaCostes(const nodo &a, const nodo &n)
 {
 	return a.path_cost < n.path_cost;
@@ -890,44 +962,6 @@ bool ComparaCostes(const nodo &a, const nodo &n)
 bool ComparaFuncion(const nodo &a, const nodo &n)
 {
 	return a.funcion < n.funcion;
-}
-
-void nodoConMenorCoste(list<nodo> &frontier, nodo a)
-{
-
-	frontier.sort(ComparaFuncion);
-
-	vector<list<nodo>::iterator> toDelete;
-	list<nodo>::iterator it;
-	bool firstMinor = false;
-
-	for (it = frontier.begin(); it != frontier.end(); ++it)
-	{
-		if (a.st.fila == it->st.fila and a.st.columna == it->st.columna and a.st.orientacion == it->st.orientacion 
-		and a.st.zapatillasOn == it->st.zapatillasOn and a.st.bikiniOn == it->st.bikiniOn)
-		{
-
-			if (a.funcion < it->funcion)
-			{
-				*it = a;
-			}
-
-			if (firstMinor)
-			{
-				toDelete.push_back(it);
-			}
-
-			firstMinor = true;
-		}
-	}
-
-	if (toDelete.size() > 0)
-	{
-		for (int i = 0; i < toDelete.size(); i++)
-		{
-			frontier.erase(toDelete[i]);
-		}
-	}
 }
 
 int ComportamientoJugador::distanceToGoal(nodo current, estado goal)
@@ -960,57 +994,113 @@ int ComportamientoJugador::distanceToGoal(nodo current, estado goal)
 		minSteps = colDifference;
 	}
 
-	if (current.st.zapatillasOn and mapaResultado[goal.fila][goal.columna] == 'B')
-	{
-		minSteps -= 75;
+	switch(current.st.orientacion){
+		case 0:
+			if(goal.fila > current.st.fila){
+				minSteps += 1;
+			}
+			break;
+		case 1:
+			if(goal.fila > current.st.fila and goal.columna < current.st.columna){
+				minSteps += 1;
+			}
+			break;
+		case 2:
+			if(current.st.columna > goal.columna){
+				minSteps += 1;
+			}
+			break;
+		case 3:
+			if(goal.fila < current.st.fila and goal.columna < current.st.columna){
+				minSteps += 1;
+			}
+			break;
+		case 4:
+			if(goal.fila < current.st.fila){
+				minSteps += 1;
+			}
+			break;
+		case 5:
+			if(goal.fila < current.st.fila and goal.columna > current.st.columna){
+				minSteps += 1;
+			}
+			break;
+		case 6:
+			if(goal.columna > current.st.columna){
+				minSteps += 1;
+			}
+			break;
+		case 7:
+			if(goal.fila > current.st.fila and goal.columna > current.st.columna){
+				minSteps += 1;
+			}
+			break;
 	}
-
-	if(current.st.bikiniOn and mapaResultado[goal.fila][goal.columna] == 'A'){
-		minSteps -= 75;
-	}
-
 	return minSteps;
 }
+
+struct ComparaFuncionCoste {
+	bool operator()(const nodo a, const nodo n){
+		return a.funcion > n.funcion;
+	}
+};
 
 bool ComportamientoJugador::pathFinding_A(const estado &origen, const estado &destino, list<Action> &plan)
 {
 	// Borro la lista
 	cout << "Calculando plan\n";
 	plan.clear();
-	set<estado, ComparaEstados> explored; // Lista de Cerrados
+	set<estado, ComparaEstadosNivel2> explored; // Lista de Cerrados
 	explored.clear();
 
-	list<nodo> frontier; // Lista de Abiertos
-	frontier.clear();
+	priority_queue<nodo, vector<nodo>, ComparaFuncionCoste> frontier; // Lista de Abiertos
 
 	nodo current;
 	current.st = origen;
+	current.heuristica = distanceToGoal(current, destino);
 	current.path_cost = 0;
-	current.funcion = current.path_cost;
+	current.funcion = current.path_cost + current.heuristica;
 	current.secuencia.empty();
 
-	frontier.push_back(current);
+	frontier.push(current);
 
 	while (!frontier.empty() and (current.st.fila != destino.fila or current.st.columna != destino.columna))
 	{
-		// cout << "List size: " << frontier.size() << " " << frontier.front().path_cost << " " << frontier.back().path_cost << endl;
+		//cout << "Abiertos size: " << frontier.size() << endl;
+		//cout << "Cerrados size: " << explored.size() << endl;
 
-		current = frontier.front();
-		frontier.erase(frontier.begin());
+		if(!frontier.empty()){
+			current = frontier.top();
+			while(explored.find(current.st) != explored.end()){
+				frontier.pop();
+				current = frontier.top();
+			} 
+		}
+		
+		frontier.pop();
 		explored.insert(current.st);
+
+		if (mapaResultado[current.st.fila][current.st.columna] == 'K')
+		{
+			current.st.equip = 2;
+		}
+		else if (mapaResultado[current.st.fila][current.st.columna] == 'D')
+		{
+			current.st.equip = 1;
+		}
 
 		// Generar descendiente de avanzar
 		nodo hijoForward = current;
 		if (!HayObstaculoDelante(hijoForward.st))
 		{
 			hijoForward.path_cost += costeCasilla(hijoForward, actFORWARD);
-			hijoForward.funcion = hijoForward.path_cost + distanceToGoal(hijoForward, destino);
+			hijoForward.heuristica = distanceToGoal(hijoForward, destino);
+			hijoForward.funcion = hijoForward.path_cost + hijoForward.heuristica;
 
 			if (explored.find(hijoForward.st) == explored.end())
 			{
 				hijoForward.secuencia.push_back(actFORWARD);
-				frontier.push_back(hijoForward);
-				nodoConMenorCoste(frontier, hijoForward);
+				frontier.push(hijoForward);
 			}
 		}
 
@@ -1018,55 +1108,54 @@ bool ComportamientoJugador::pathFinding_A(const estado &origen, const estado &de
 		nodo hijoTurnR = current;
 		hijoTurnR.st.orientacion = (hijoTurnR.st.orientacion + 2) % 8;
 		hijoTurnR.path_cost += costeCasilla(hijoTurnR, actTURN_R);
-		hijoTurnR.funcion = hijoTurnR.path_cost + distanceToGoal(hijoTurnR, destino);
+		hijoTurnR.heuristica = distanceToGoal(hijoTurnR, destino);
+		hijoTurnR.funcion = hijoTurnR.path_cost + hijoTurnR.heuristica;
 
 		if (explored.find(hijoTurnR.st) == explored.end())
 		{
 			hijoTurnR.secuencia.push_back(actTURN_R);
-			frontier.push_back(hijoTurnR);
-			nodoConMenorCoste(frontier, hijoTurnR);
+			frontier.push(hijoTurnR);
 		}
 
 		// Generar descendiente de girar a la izquierda 90 grados
 		nodo hijoTurnL = current;
 		hijoTurnL.st.orientacion = (hijoTurnL.st.orientacion + 6) % 8;
 		hijoTurnL.path_cost += costeCasilla(hijoTurnL, actTURN_L);
-		hijoTurnL.funcion = hijoTurnL.path_cost + distanceToGoal(hijoTurnL, destino);
+		hijoTurnL.heuristica = distanceToGoal(hijoTurnL, destino);
+		hijoTurnL.funcion = hijoTurnL.path_cost + hijoTurnL.heuristica;
 
 		if (explored.find(hijoTurnL.st) == explored.end())
 		{
 			hijoTurnL.secuencia.push_back(actTURN_L);
-			frontier.push_back(hijoTurnL);
-			nodoConMenorCoste(frontier, hijoTurnL);
+			frontier.push(hijoTurnL);
 		}
 
 		// Generar descendiente de girar a la derecha 45 grados
 		nodo hijoSEMITurnR = current;
 		hijoSEMITurnR.st.orientacion = (hijoSEMITurnR.st.orientacion + 1) % 8;
 		hijoSEMITurnR.path_cost += costeCasilla(hijoSEMITurnR, actSEMITURN_R);
-		hijoSEMITurnR.funcion = hijoSEMITurnR.path_cost + distanceToGoal(hijoSEMITurnR, destino);
-
+		hijoSEMITurnR.heuristica = distanceToGoal(hijoSEMITurnR, destino);
+		hijoSEMITurnR.funcion = hijoSEMITurnR.path_cost + hijoSEMITurnR.heuristica;
+		
 		if (explored.find(hijoSEMITurnR.st) == explored.end())
 		{
 			hijoSEMITurnR.secuencia.push_back(actSEMITURN_R);
-			frontier.push_back(hijoSEMITurnR);
-			nodoConMenorCoste(frontier, hijoSEMITurnR);
+			frontier.push(hijoSEMITurnR);
 		}
 
 		// Generar descendiente de girar a la izquierda 45 grados
 		nodo hijoSEMITurnL = current;
 		hijoSEMITurnL.st.orientacion = (hijoSEMITurnL.st.orientacion + 7) % 8;
 		hijoSEMITurnL.path_cost += costeCasilla(hijoSEMITurnL, actSEMITURN_L);
-		hijoSEMITurnL.funcion = hijoSEMITurnL.path_cost + distanceToGoal(hijoSEMITurnL, destino);
+		hijoSEMITurnL.heuristica = distanceToGoal(hijoSEMITurnL, destino);
+		hijoSEMITurnL.funcion = hijoSEMITurnL.path_cost + hijoSEMITurnL.heuristica;
 
-		if (explored.find(hijoSEMITurnL.st) == explored.end())
+		if (explored.find(hijoSEMITurnR.st) == explored.end())
 		{
 			hijoSEMITurnL.secuencia.push_back(actSEMITURN_L);
-			frontier.push_back(hijoSEMITurnL);
-			nodoConMenorCoste(frontier, hijoSEMITurnL);
+			frontier.push(hijoSEMITurnL);
 		}
-
-		frontier.sort(ComparaFuncion);
+	
 	}
 
 	cout << "Terminada la busqueda\n";
@@ -1163,6 +1252,8 @@ bool ComportamientoJugador::pathFinding_Anchura(const estado &origen, const esta
 			hijoSEMITurnL.secuencia.push_back(actSEMITURN_L);
 			frontier.push(hijoSEMITurnL);
 		}
+
+		
 	}
 
 	// cout << "Terminada la busqueda\n";

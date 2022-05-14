@@ -9,8 +9,7 @@ struct estado {
   int fila;
   int columna;
   int orientacion;
-  bool bikiniOn = false;
-	bool zapatillasOn = false;
+  int equip = 0;
 };
 
 struct nodo
@@ -18,6 +17,7 @@ struct nodo
 	estado st;
 	list<Action> secuencia;
 	double path_cost = 0;
+  double heuristica = 0;
   int funcion = 0;
 };
 
@@ -79,6 +79,7 @@ class ComportamientoJugador : public Comportamiento {
     void actualizarBrujulaPosicion();
     void actualizarPosicion();
 
+    pair<int, int> findCasilla(char type);
 
     void PintaPlan(list<Action> plan);
     bool HayObstaculoDelante(estado &st);
