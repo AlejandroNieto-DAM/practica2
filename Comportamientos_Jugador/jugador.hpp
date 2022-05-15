@@ -57,6 +57,7 @@ class ComportamientoJugador : public Comportamiento {
     int fil;
     int col;
     bool firstIteration;
+    bool lookingForBattery;
   
 
     // Métodos privados de la clase
