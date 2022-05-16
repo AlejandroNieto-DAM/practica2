@@ -522,7 +522,7 @@ Action ComportamientoJugador::think(Sensores sensores)
 		}
 	}
 
-	if (hayPlan and sensores.bateria < 1000 and sensores.nivel >= 3 and lookingForBattery == false)
+	if (hayPlan and sensores.bateria < 1000 and sensores.nivel >= 3)
 	{
 		pair<int, int> posicionRecarga = findCasilla('X');
 		if (posicionRecarga.first != -1)
@@ -542,9 +542,7 @@ Action ComportamientoJugador::think(Sensores sensores)
 		lookingForBattery = true;
 	}
 
-	if(mapaResultado[actual.fila][actual.columna] == 'X'){
-		lookingForBattery = false;
-	}
+
 
 	if (sensores.nivel < 3)
 	{
@@ -879,7 +877,7 @@ void ComportamientoJugador::busquedaPuntoLejano(estado current, int nivel)
 	case 4:
 	case 5:
 
-		for (int i =  current.fila; i < mapaResultado.size() and encontrado == false; i++)
+		for (int i = current.fila; i < mapaResultado.size() - 3 and encontrado == false; i++)
 		{
 			for (int j = mapaResultado.size() - 4; j >= 3; j--)
 			{
@@ -932,9 +930,9 @@ void ComportamientoJugador::busquedaPuntoLejano(estado current, int nivel)
 
 	case 2:
 
-		for (int i = mapaResultado.size() - 4; i >= 3 and encontrado == false; i--)
+		for (int i = 3; i < mapaResultado.size() - 3 and encontrado == false; i++)
 		{
-			for (int j = 3; j < mapaResultado.size() - 3; j++)
+			for (int j = mapaResultado.size() - 4; j >= 3; j--)
 			{
 				if (mapaResultado[j][i] == '?')
 				{
@@ -971,9 +969,9 @@ void ComportamientoJugador::busquedaPuntoLejano(estado current, int nivel)
 
 	case 6:
 
-		for (int i = 3; i < mapaResultado.size() - 3 and encontrado == false; i++)
+		for (int i = mapaResultado.size() - 4; i >= 3 and encontrado == false; i--)
 		{
-			for (int j = mapaResultado.size() - 4; j >= 3; j--)
+			for (int j = 3; j < mapaResultado.size() - 3; j++)
 			{
 				if (mapaResultado[j][i] == '?')
 				{
@@ -983,6 +981,8 @@ void ComportamientoJugador::busquedaPuntoLejano(estado current, int nivel)
 				}
 			}
 		}
+
+		
 
 		if (encontrado == true)
 		{
@@ -1010,6 +1010,7 @@ void ComportamientoJugador::busquedaPuntoLejano(estado current, int nivel)
 	}
 
 	if(encontrado == false){
+		cout << "Punto no encontrado" << endl;
 		positionToGo.first = 3;
 		positionToGo.second = 3;
 		aux.fila = positionToGo.first;
